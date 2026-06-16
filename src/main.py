@@ -7,6 +7,8 @@ import utils.config as config
 
 
 def main():
+
+    loaderData.load_data()
     pass
 
 if __name__ == "__main__":
