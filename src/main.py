@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from pathlib import Path
 from data_loader import load_data
 from transform import clean_data, split_data
