@@ -1,11 +1,4 @@
-def create_date_features():
-    pass
+import pandas as pd
 
-def create_lag_features():
-    pass
-
-def daily_avg():
-    pass
-
-def monthly_avg():
-    pass
+def create_features(data: pd.DataFrame) -> pd.DataFrame:
+    return data
