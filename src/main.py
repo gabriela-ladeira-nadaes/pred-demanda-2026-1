@@ -8,7 +8,7 @@ DATA_PATH = Path("data/walmart_dataset_sales.csv")
 def main() -> None:
     data: pd.DataFrame = load_data(DATA_PATH)
     if not validate_data(data):
-        print("Base de daos nao validade")
+        print("Base de dados nao validade")
         return
         
     data = clean_data(data)
