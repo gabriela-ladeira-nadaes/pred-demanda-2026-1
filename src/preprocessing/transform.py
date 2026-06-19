@@ -8,9 +8,11 @@ def split_data(
     target_column: str
     ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
 
-    x_train = []
-    y_train = []
-    x_test = []
-    y_test = []
+    X = data.drop(columns=[target_column])
+    y = data[target_column]
 
-    return x_train, y_train, x_test, y_test
+    # placeholders
+    X_train, X_test = X, X 
+    y_train, y_test = y, y
+
+    return X_train, X_test, y_train, y_test
