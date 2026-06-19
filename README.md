@@ -1,16 +1,16 @@
-# Predição de Vendas com Séries Temporais utilizando PyTorch
+# Previsão de Vendas com Séries Temporais 
 
 Projeto desenvolvido para a disciplina **Engenharia de Software para IA e Frameworks Profundos** do programa de pós-graduação em **Deep Learning** do **Centro de Informática (CIn) da Universidade Federal de Pernambuco (UFPE)**.
 
 ## Objetivo
 
-Desenvolver um modelo de previsão de vendas por meio de técnicas de **Séries Temporais**, utilizando PyTorch, aplicadas ao conjunto de dados de vendas do Walmart.
+Desenvolver e avaliar um modelo de previsão de vendas por meio de técnicas de **Séries Temporais**, utilizando o framework PyTorch, com base no histórico de vendas do Walmart.
 
 ## Problema de Negócio
 
 A previsão de vendas é um desafio importante no varejo, pois permite antecipar demandas futuras e apoiar o planejamento operacional.
 
-Neste projeto, buscamos explorar os padrões temporais presentes no histórico de vendas do Walmart para construir um modelo capaz de realizar previsões futuras com base em dados históricos.
+Este projeto busca explorar os padrões temporais presentes no histórico de vendas do Walmart para construir um modelo capaz de realizar previsões futuras com base em dados históricos.
 
 ## Dataset
 
