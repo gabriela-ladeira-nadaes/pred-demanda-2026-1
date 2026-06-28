@@ -1,8 +1,8 @@
-import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
+import torch.nn as nn
+from torch.utils.data import DataLoader
 
-def train_model(X_train: pd.DataFrame, y_train: pd.Series) -> RandomForestRegressor:
-    model = RandomForestRegressor()
-    # model.fit(X_train, y_train) a ser implementado
-    return model
-    
+# Placeholder do treinamento
+
+def train_model(train_loader: DataLoader, input_dim: int) -> nn.Module:
+    """Treina o modelo a partir do DataLoader de treino"""
+    pass

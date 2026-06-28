@@ -1,10 +1,11 @@
 from pathlib import Path
-from sklearn.ensemble import RandomForestRegressor
+import torch
+import torch.nn as nn
 
-def save_model(path: str | Path, model: RandomForestRegressor) -> None:
-    """
-    Nesta etapa, RandomForestRegressor é utilizado apenas como exemplo de
-    tipo na assinatura da função para demonstrar o uso de tipagem em Python.
-    A implementação final poderá suportar diferentes tipos de modelos.
-    """
+def save_model(model: nn.Module, path: str | Path) -> None:
+    """Salva os pesos do modelo. Placeholder para a próxima entrega."""
+    pass
+
+def load_model(model: nn.Module, path: str | Path) -> nn.Module:
+    """Carrega os pesos do modelo. Implementação na Etapa 6."""
     pass
