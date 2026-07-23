@@ -18,3 +18,10 @@ def make_dataset(X: torch.Tensor, y: torch.Tensor) -> TensorDataset:
 
 def make_dataloader(dataset: TensorDataset, batch_size: int = 64, shuffle: bool = False) -> DataLoader:
     """Cria dataloader a partir de um TensorDataset"""
+    dataloader = DataLoader(
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=shuffle
+    )
+    
+    return dataloader
