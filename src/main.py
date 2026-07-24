@@ -1,10 +1,12 @@
 import pandas as pd
+import torch
 
-from data.data_loader import load_data, validate_data
+from data.data_loader import load_data, validate_data, save_model
 from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
 from preprocessing.transform import clean_data, build_features_matrix, split_data, standardize, describe_array
 from preprocessing.features import create_features
-from utils.config import DATA_PATH
+from utils.config import DATA_PATH, NUMERIC_FEATURES, CATEGORICAL_FEATURES,RANDOM_SEED
+from training.train import LinearRegression,train_model
 
 def main() -> None:
     # Carregamento e validacao
@@ -16,7 +18,7 @@ def main() -> None:
     
     # Limpeza e definicao de atributos temporais
     data = clean_data(data)
-    data = create_features(data)
+    #data = create_features(data)
 
     # Criacao de matriz de features e vetor alvo em NumPy
     X, y = build_features_matrix(data)
@@ -37,12 +39,13 @@ def main() -> None:
     train_loader = make_dataloader(train_dataset, shuffle = True)
     test_loader = make_dataloader(test_dataset)
 
-    X_batch, y_batch = next(iter(train_loader))
+    torch.manual_seed(RANDOM_SEED)
+    input_dim = len(NUMERIC_FEATURES) + len(CATEGORICAL_FEATURES)
+    output_dim = 1  # 1 valor sendo previsto
+    model = LinearRegression(input_dim, output_dim)
 
-    print(f"Device: {device}")
-    print(f"Tensores -> X: {X_train_t.shape} {X_train_t.dtype} , y: {y_train_t.shape} {y_train_t.dtype}")
-    print(f"Batch de treino -> X: {tuple(X_batch.shape)}, y: {tuple(y_batch.shape)}")
-    print(f"Nº de batches (treino): {len(train_loader)} vs. (teste): {len(test_loader)}")
-
+    model = train_model(model,5, train_loader, test_loader)
+    save_model(model)
+   
 if __name__ == "__main__":
     main()

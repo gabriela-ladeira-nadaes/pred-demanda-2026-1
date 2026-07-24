@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
+from sklearn.model_selection import train_test_split
 
-from utils.config import (DATE_COLUMN, TARGET_COLUMN, TEST_SIZE, NUMERIC_FEATURES, CATEGORICAL_FEATURES, TEMPORAL_FEATURES)
+from utils.config import (DATE_COLUMN, TARGET_COLUMN, TEST_SIZE, NUMERIC_FEATURES, CATEGORICAL_FEATURES, TEMPORAL_FEATURES,RANDOM_SEED)
 
 def sort_data(data: pd.DataFrame, date_col: str) -> pd.DataFrame:
     """Ordena o df por data"""
@@ -18,17 +19,14 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
 def build_features_matrix(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     """Monta arrays NumPy para a matriz de features (X) e o vetor alvo (y). 
     Ao chamar esta funcao, as features categoricas devem estar encodadas."""
-    feature_cols = NUMERIC_FEATURES + TEMPORAL_FEATURES + CATEGORICAL_FEATURES # Necessario ordenar desta forma para a funcao standardize
+    feature_cols = NUMERIC_FEATURES + CATEGORICAL_FEATURES # Necessario ordenar desta forma para a funcao standardize
     X = data[feature_cols].to_numpy(dtype = np.float32)
     y = data[TARGET_COLUMN].to_numpy(dtype = np.float32)
     return X, y
 
 def split_data(X: np.ndarray, y: np.ndarray, test_size: float = TEST_SIZE) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Divide dados de treino e teste ordenados cronologicamente para evitar vazamento"""
-    boundary = int(X.shape[0]*(1 - test_size))
-    X_train, X_test = X[:boundary], X[boundary:] 
-    y_train, y_test = y[:boundary], y[boundary:]
-    return X_train, X_test, y_train, y_test
+    """Divide dados de treino e teste ordenados cronologicamente para evitar vazamento"""   
+    return train_test_split(X, y, test_size=test_size, random_state=RANDOM_SEED)
 
 def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Normalizacao z-score utilizando NumPy.
@@ -38,7 +36,7 @@ def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np
     X_test = X_test.copy()
     
     # Selecao de features continuas (nao-categoricas)
-    n_continuous = len(NUMERIC_FEATURES) + len(TEMPORAL_FEATURES) # As primeiras n colunas sao continuas conforme definido em build_features_matrix
+    n_continuous = len(NUMERIC_FEATURES) #+ len(TEMPORAL_FEATURES) # As primeiras n colunas sao continuas conforme definido em build_features_matrix
     cont_train = X_train[:, :n_continuous].astype(np.float64) # float 64 porque, para calcular mean e std, a soma dos anos estouraria o limite de inteiros exatos do float32
 
     # Metricas e normalizacao

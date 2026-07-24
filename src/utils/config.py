@@ -19,7 +19,8 @@ DATE_COLUMN: str = "Date"
 CATEGORICAL_FEATURES: list[str] = ["Store", "Dept", "Type", "IsHoliday"]
 
 # Features numericos
-NUMERIC_FEATURES: list[str] = ["Temperature", "Fuel_Price", "MarkDown1", "MarkDown2", "MarkDown3", "MarkDown4", "MarkDown5", "CPI", "Unemployment", "Size"]
+NUMERIC_FEATURES: list[str] = ["Temperature", "Fuel_Price", "CPI", "Unemployment", "Size"]
 
 # Features temporais numericos derivados da coluna Date em no pre-processamento
 TEMPORAL_FEATURES: list[str] = ["Year", "Month", "WeekOfYear"]
+
