@@ -9,7 +9,7 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
     """Treina o modelo a partir do DataLoader de treino"""
     criterion_mse = nn.MSELoss()
     criterion_mae = nn.L1Loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     
     for epoch in range(epochs):
         model.train()
@@ -20,7 +20,12 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
         train_targets = []
         for batch_X, batch_y in train_loader:
             optimizer.zero_grad()
-            
+
+            # move batches to same device as model
+            device = next(model.parameters()).device
+            batch_X = batch_X.to(device)
+            batch_y = batch_y.to(device)
+
             predictions = model(batch_X)
           
             loss_mse = criterion_mse(predictions, batch_y)
@@ -29,8 +34,8 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
             optimizer.step()
             train_mse_loss += loss_mse.item()
             train_mae_loss += loss_mae.item()
-            train_predictions.extend(predictions.detach().numpy())
-            train_targets.extend(batch_y.detach().numpy())
+            train_predictions.extend(predictions.detach().cpu().numpy().ravel().tolist())
+            train_targets.extend(batch_y.detach().cpu().numpy().ravel().tolist())
         
         avg_train_mse = train_mse_loss / len(train_loader)
         avg_train_rmse = avg_train_mse ** 0.5
@@ -46,14 +51,18 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
         
         with torch.no_grad():
             for batch_X, batch_y in test_loader:
+                device = next(model.parameters()).device
+                batch_X = batch_X.to(device)
+                batch_y = batch_y.to(device)
+
                 predictions = model(batch_X)
                 mse = criterion_mse(predictions, batch_y)
                 mae = criterion_mae(predictions, batch_y)
                 
                 test_mse_loss += mse.item()
                 test_mae_loss += mae.item()
-                test_predictions.extend(predictions.numpy())
-                test_targets.extend(batch_y.numpy())
+                test_predictions.extend(predictions.detach().cpu().numpy().ravel().tolist())
+                test_targets.extend(batch_y.detach().cpu().numpy().ravel().tolist())
                 
       
         avg_test_mse = test_mse_loss / len(test_loader)

@@ -5,9 +5,10 @@ BASE_DIR: Path = Path(__file__).resolve().parents[2] # raiz do projeto 3 níveis
 DATA_PATH: Path = BASE_DIR/"data"/"walmart_dataset_sales.csv" # caminho do dataset
 
 # Parametros do experimento
-RANDOM_SEED: int = 42
+FIXED_SEED: int = 42
 TEST_SIZE: float = 0.2
 BATCH_SIZE: int = 64
+EPOCHS: int = 50
 
 # Coluna alvo
 TARGET_COLUMN: str = "Weekly_Sales"

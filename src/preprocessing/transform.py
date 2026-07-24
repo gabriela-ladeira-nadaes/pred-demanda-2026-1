@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 
-from utils.config import (DATE_COLUMN, TARGET_COLUMN, TEST_SIZE, NUMERIC_FEATURES, CATEGORICAL_FEATURES, CATEGORICAL_FEATURES_WITHOUT_BOOLEAN,RANDOM_SEED)
+from utils.config import (DATE_COLUMN, TARGET_COLUMN, TEST_SIZE, NUMERIC_FEATURES, CATEGORICAL_FEATURES, CATEGORICAL_FEATURES_WITHOUT_BOOLEAN, FIXED_SEED)
 
 def sort_data(data: pd.DataFrame, date_col: str) -> pd.DataFrame:
     """Ordena o df por data"""
@@ -28,7 +28,7 @@ def build_features_matrix(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
 
 def split_data(X: np.ndarray, y: np.ndarray, test_size: float = TEST_SIZE) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Divide dados de treino e teste ordenados cronologicamente para evitar vazamento"""   
-    return train_test_split(X, y, test_size=test_size, random_state=RANDOM_SEED)
+    return train_test_split(X, y, test_size=test_size, random_state=FIXED_SEED, shuffle=False)
 
 def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     feature_cols = NUMERIC_FEATURES + CATEGORICAL_FEATURES

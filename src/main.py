@@ -5,7 +5,7 @@ from data.data_loader import load_data, validate_data, save_model
 from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
 from preprocessing.transform import clean_data, build_features_matrix, split_data, standardize, describe_array
 from preprocessing.features import create_features
-from utils.config import DATA_PATH, BATCH_SIZE,RANDOM_SEED
+from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
 from training.train import LinearRegression,train_model
 
 def main() -> None:
@@ -36,15 +36,16 @@ def main() -> None:
 
     train_dataset = make_dataset(X_train_t, y_train_t)
     test_dataset = make_dataset(X_test_t, y_test_t)
-    train_loader = make_dataloader(train_dataset, shuffle = True)
-    test_loader = make_dataloader(test_dataset)
+    train_loader = make_dataloader(train_dataset, batch_size=BATCH_SIZE, shuffle = True)
+    test_loader = make_dataloader(test_dataset, batch_size=BATCH_SIZE)
 
-    torch.manual_seed(RANDOM_SEED)
+    torch.manual_seed(FIXED_SEED)
     input_dim = X_train_t.shape[1]
     output_dim = 1  # 1 valor sendo previsto
     model = LinearRegression(input_dim, output_dim)
-    
-    model = train_model(model,BATCH_SIZE, train_loader, test_loader)
+    model = model.to(device)
+
+    model = train_model(model, EPOCHS, train_loader, test_loader)
     save_model(model)
    
 if __name__ == "__main__":
