@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
 
-from utils.config import (DATE_COLUMN, TARGET_COLUMN, TEST_SIZE, NUMERIC_FEATURES, CATEGORICAL_FEATURES, TEMPORAL_FEATURES,RANDOM_SEED)
+from utils.config import (DATE_COLUMN, TARGET_COLUMN, TEST_SIZE, NUMERIC_FEATURES, CATEGORICAL_FEATURES, CATEGORICAL_FEATURES_WITHOUT_BOOLEAN,RANDOM_SEED)
 
 def sort_data(data: pd.DataFrame, date_col: str) -> pd.DataFrame:
     """Ordena o df por data"""
@@ -29,26 +31,22 @@ def split_data(X: np.ndarray, y: np.ndarray, test_size: float = TEST_SIZE) -> tu
     return train_test_split(X, y, test_size=test_size, random_state=RANDOM_SEED)
 
 def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Normalizacao z-score utilizando NumPy.
-    Calcula media e desvio padrao somente no conjunto de treino e aplica aos conjuntos de treino e teste para evitar vazamento.
-    Colunas categoricas nao sao alteradas. Alteramos apenas colunas com valores continuos."""
-    X_train = X_train.copy()
-    X_test = X_test.copy()
-    
-    # Selecao de features continuas (nao-categoricas)
-    n_continuous = len(NUMERIC_FEATURES) #+ len(TEMPORAL_FEATURES) # As primeiras n colunas sao continuas conforme definido em build_features_matrix
-    cont_train = X_train[:, :n_continuous].astype(np.float64) # float 64 porque, para calcular mean e std, a soma dos anos estouraria o limite de inteiros exatos do float32
+    feature_cols = NUMERIC_FEATURES + CATEGORICAL_FEATURES
+    X_train_df = pd.DataFrame(X_train, columns=feature_cols)
+    X_test_df = pd.DataFrame(X_test, columns=feature_cols)
 
-    # Metricas e normalizacao
-    mean = cont_train.mean(axis = 0)
-    std = cont_train.std(axis = 0)
-    std[std == 0] = 1.0 # evitar divisao por zero caso a coluna seja constante
+    standardizer = ColumnTransformer(
+        transformers=[           
+            ('categorics', OneHotEncoder(drop='first', sparse_output=False), CATEGORICAL_FEATURES_WITHOUT_BOOLEAN),
+            ('numerics', StandardScaler(), NUMERIC_FEATURES),
+            ('boolean', 'passthrough', ["IsHoliday"]) 
+        ]
+    )
 
-    out_dtype = X_train.dtype
-    X_train[:, :n_continuous] = ((X_train[:, :n_continuous].astype(np.float64) - mean) / std).astype(out_dtype)
-    X_test[:, :n_continuous]  = ((X_test[:, :n_continuous].astype(np.float64)  - mean) / std).astype(out_dtype)
-    
-    return X_train, X_test
+    X_train_processed = standardizer.fit_transform(X_train_df)
+
+    X_test_processed = standardizer.transform(X_test_df)
+    return X_train_processed, X_test_processed
 
 def describe_array(data: np.ndarray) -> dict[str, object]:
     """

@@ -18,6 +18,8 @@ DATE_COLUMN: str = "Date"
 # Features categoricos
 CATEGORICAL_FEATURES: list[str] = ["Store", "Dept", "Type", "IsHoliday"]
 
+CATEGORICAL_FEATURES_WITHOUT_BOOLEAN : list[str] = ["Store", "Dept", "Type"]
+
 # Features numericos
 NUMERIC_FEATURES: list[str] = ["Temperature", "Fuel_Price", "CPI", "Unemployment", "Size"]
 
