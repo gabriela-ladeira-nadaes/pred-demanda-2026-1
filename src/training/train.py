@@ -9,7 +9,7 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
     """Treina o modelo a partir do DataLoader de treino"""
     criterion_mse = nn.MSELoss()
     criterion_mae = nn.L1Loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     
     for epoch in range(epochs):
         model.train()
