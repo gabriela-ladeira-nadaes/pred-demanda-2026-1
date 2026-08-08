@@ -18,15 +18,15 @@ def main() -> None:
     
     # Limpeza e definicao de atributos temporais
     data = clean_data(data)
-    #data = create_features(data)
+    data = create_features(data)
 
     # Criacao de matriz de features e vetor alvo em NumPy
-    X, y = build_features_matrix(data)
-    print("Estatísticas do alvo (y):", describe_array(y))
-
     # Split cronologico e normalizacao
-    X_train, X_test, y_train, y_test = split_data(X, y)
+    X_train,y_train, X_test, y_test = split_data(data)
     X_train, X_test = standardize(X_train, X_test)
+
+    print("Estatísticas do alvo (y_train):", describe_array(y_train))
+    print("Estatísticas do alvo (y_test):", describe_array(y_test))
     print(f"X_train: {X_train.shape} | X_test: {X_test.shape}")
 
     # Criacao de tensores, dataset e dataloader
