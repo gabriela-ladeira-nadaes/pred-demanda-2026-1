@@ -9,7 +9,7 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
     """Treina o modelo a partir do DataLoader de treino"""
     criterion_mse = nn.MSELoss()
     criterion_mae = nn.L1Loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.00015)
     
     for epoch in range(epochs):
         model.train()
@@ -86,3 +86,30 @@ class LinearRegression(nn.Module):
         # Forward pass
         out = self.linear(x)
         return out
+class FinnancialModel(nn.Module):
+    def __init__(self, input_dim: int, output_dim: int):
+        super(FinnancialModel, self).__init__()
+        
+        self.net = nn.Sequential(
+            # Primeira camada oculta
+            nn.Linear(input_dim, 256),
+            nn.ReLU(),
+            nn.BatchNorm1d(256),
+            nn.Dropout(0.2),
+            
+            # Segunda camada oculta
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.BatchNorm1d(128),
+            nn.Dropout(0.2),
+            
+            # Terceira camada oculta
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            
+            # Camada de Saída (1 neurônio para prever Weekly_Sales)
+            nn.Linear(64, output_dim)
+        )
+
+    def forward(self, x):
+        return self.net(x)

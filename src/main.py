@@ -6,7 +6,7 @@ from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
 from preprocessing.transform import clean_data, build_features_matrix, split_data, standardize, describe_array
 from preprocessing.features import create_features
 from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
-from training.train import LinearRegression,train_model
+from training.train import FinnancialModel,train_model
 
 def main() -> None:
     # Carregamento e validacao
@@ -42,7 +42,7 @@ def main() -> None:
     torch.manual_seed(FIXED_SEED)
     input_dim = X_train_t.shape[1]
     output_dim = 1  # 1 valor sendo previsto
-    model = LinearRegression(input_dim, output_dim)
+    model = FinnancialModel(input_dim,output_dim)
     model = model.to(device)
 
     model = train_model(model, EPOCHS, train_loader, test_loader)
