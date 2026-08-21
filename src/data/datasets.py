@@ -9,7 +9,9 @@ def get_device() -> torch.device:
 def to_tensors(X: np.ndarray, y: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
     """Converte arrays NumPy para tensores."""
     X_tensor = torch.tensor(X, dtype=torch.float32)
-    y_tensor = torch.tensor(y, dtype=torch.float32).reshape(-1, 1) # target ajustado para formato (N,1)
+    y_tensor = torch.tensor(y, dtype=torch.float32)
+    if y_tensor.ndim == 1:
+        y_tensor = y_tensor.reshape(-1, 1)
     return X_tensor, y_tensor
 
 def make_dataset(X: torch.Tensor, y: torch.Tensor) -> TensorDataset:

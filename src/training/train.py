@@ -1,15 +1,16 @@
 import copy
 import torch
 import torch.nn as nn
+import numpy as np
 from torch.utils.data import DataLoader
-from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.preprocessing import StandardScaler
 
 # Placeholder do treinamento
 
-def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_loader: DataLoader) -> nn.Module:
+def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_loader: DataLoader, scaler_Y: StandardScaler) -> nn.Module:
     """Treina o modelo a partir do DataLoader de treino"""
-    criterion_mse = nn.MSELoss()
-    criterion_mae = nn.L1Loss()
+    criterion_mse = nn.MSELoss()    
     optimizer = torch.optim.Adam(model.parameters(), lr=0.00015, weight_decay=1e-4)
 
     best_test_mae = float('inf')  # Começa com infinito
@@ -18,9 +19,7 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
     
     for epoch in range(epochs):
         model.train()
-        train_mse_loss = 0.0
-        train_mae_loss = 0.0
-        
+                
         train_predictions = []
         train_targets = []
         for batch_X, batch_y in train_loader:
@@ -34,18 +33,20 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
             predictions = model(batch_X)
           
             loss_mse = criterion_mse(predictions, batch_y)
-            loss_mae = criterion_mae(predictions, batch_y)
             loss_mse.backward()
             optimizer.step()
-            train_mse_loss += loss_mse.item()
-            train_mae_loss += loss_mae.item()
+            
             train_predictions.extend(predictions.detach().cpu().numpy().ravel().tolist())
             train_targets.extend(batch_y.detach().cpu().numpy().ravel().tolist())
-        
-        avg_train_mse = train_mse_loss / len(train_loader)
-        avg_train_rmse = avg_train_mse ** 0.5
-        avg_train_mae = train_mae_loss / len(train_loader)
-        train_r2 = r2_score(train_targets, train_predictions)
+
+        train_preds_np = np.array(train_predictions).reshape(-1, 1)
+        train_targets_np = np.array(train_targets).reshape(-1, 1)
+        train_preds_real = scaler_Y.inverse_transform(train_preds_np)
+        train_targets_real = scaler_Y.inverse_transform(train_targets_np)
+
+        avg_train_rmse = mean_squared_error(train_targets_real, train_preds_real) ** 0.5
+        avg_train_mae = mean_absolute_error(train_targets_real, train_preds_real)
+        train_r2 = r2_score(train_targets_real, train_preds_real)
 
         model.eval()
         test_mse_loss = 0.0
@@ -61,19 +62,19 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
                 batch_y = batch_y.to(device)
 
                 predictions = model(batch_X)
-                mse = criterion_mse(predictions, batch_y)
-                mae = criterion_mae(predictions, batch_y)
                 
-                test_mse_loss += mse.item()
-                test_mae_loss += mae.item()
                 test_predictions.extend(predictions.detach().cpu().numpy().ravel().tolist())
                 test_targets.extend(batch_y.detach().cpu().numpy().ravel().tolist())
                 
-      
-        avg_test_mse = test_mse_loss / len(test_loader)
-        avg_test_rmse = avg_test_mse ** 0.5
-        avg_test_mae = test_mae_loss / len(test_loader)
-        test_r2 = r2_score(test_targets, test_predictions)
+        test_preds_np = np.array(test_predictions).reshape(-1, 1)
+        test_targets_np = np.array(test_targets).reshape(-1, 1)
+        
+        test_preds_real = scaler_Y.inverse_transform(test_preds_np)
+        test_targets_real = scaler_Y.inverse_transform(test_targets_np)
+
+        avg_test_rmse = mean_squared_error(test_targets_real, test_preds_real) ** 0.5
+        avg_test_mae = mean_absolute_error(test_targets_real, test_preds_real)
+        test_r2 = r2_score(test_targets_real, test_preds_real)
 
         if avg_test_mae < best_test_mae:
             best_test_mae = avg_test_mae         

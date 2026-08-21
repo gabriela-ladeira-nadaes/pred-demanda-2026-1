@@ -3,7 +3,7 @@ import torch
 
 from data.data_loader import load_data, validate_data, save_model
 from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
-from preprocessing.transform import clean_data, build_features_matrix, split_data, standardize, describe_array
+from preprocessing.transform import clean_data, build_features_matrix, split_data, standardize, describe_array, standardize_y
 from preprocessing.features import create_features
 from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
 from training.train import FinnancialModel,train_model
@@ -25,14 +25,17 @@ def main() -> None:
     X_train,y_train, X_test, y_test = split_data(data)
     X_train, X_test = standardize(X_train, X_test)
 
+    #Normalizar Y
+    y_train_scaled, y_test_scaled, scaler_y = standardize_y(y_train,y_test)
+
     print("Estatísticas do alvo (y_train):", describe_array(y_train))
     print("Estatísticas do alvo (y_test):", describe_array(y_test))
     print(f"X_train: {X_train.shape} | X_test: {X_test.shape}")
 
     # Criacao de tensores, dataset e dataloader
     device = get_device()
-    X_train_t, y_train_t = to_tensors(X_train, y_train)
-    X_test_t, y_test_t = to_tensors(X_test, y_test)
+    X_train_t, y_train_t = to_tensors(X_train, y_train_scaled)
+    X_test_t, y_test_t = to_tensors(X_test, y_test_scaled)
 
     train_dataset = make_dataset(X_train_t, y_train_t)
     test_dataset = make_dataset(X_test_t, y_test_t)
@@ -45,7 +48,7 @@ def main() -> None:
     model = FinnancialModel(input_dim,output_dim)
     model = model.to(device)
 
-    model = train_model(model, EPOCHS, train_loader, test_loader)
+    model = train_model(model, EPOCHS, train_loader, test_loader,scaler_y)
     save_model(model)
    
 if __name__ == "__main__":

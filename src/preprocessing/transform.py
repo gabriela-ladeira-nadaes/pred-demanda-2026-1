@@ -53,6 +53,12 @@ def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np
     X_test_processed = standardizer.transform(X_test_df)
     return X_train_processed, X_test_processed
 
+def standardize_y(y_train: np.ndarray, y_test: np.ndarray) -> tuple[np.ndarray, np.ndarray, StandardScaler]:
+    scaler_y = StandardScaler()
+    y_train_scaled = scaler_y.fit_transform(y_train.reshape(-1, 1))
+    y_test_scaled = scaler_y.transform(y_test.reshape(-1, 1))
+    return y_train_scaled, y_test_scaled, scaler_y
+
 def describe_array(data: np.ndarray) -> dict[str, object]:
     """
     Retorna informacoes basicas sobre os dados.
