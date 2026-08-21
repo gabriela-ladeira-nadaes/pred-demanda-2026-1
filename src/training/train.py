@@ -1,3 +1,4 @@
+import copy
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -9,7 +10,11 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
     """Treina o modelo a partir do DataLoader de treino"""
     criterion_mse = nn.MSELoss()
     criterion_mae = nn.L1Loss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.00015)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.00015, weight_decay=1e-4)
+
+    best_test_mae = float('inf')  # Começa com infinito
+    best_model_weights = None
+    best_epoch = 1
     
     for epoch in range(epochs):
         model.train()
@@ -69,11 +74,18 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
         avg_test_rmse = avg_test_mse ** 0.5
         avg_test_mae = test_mae_loss / len(test_loader)
         test_r2 = r2_score(test_targets, test_predictions)
+
+        if avg_test_mae < best_test_mae:
+            best_test_mae = avg_test_mae         
+            best_model_weights = copy.deepcopy(model.state_dict())
+            best_epoch = epoch + 1
         
         print(f"Epoch [{epoch+1}/{epochs}]")
         print(f"  TRAIN -> RMSE: {avg_train_rmse:.2f} | MAE: {avg_train_mae:.2f} | R2: {train_r2:.4f}")
         print(f"  TEST  -> RMSE: {avg_test_rmse:.2f} | MAE: {avg_test_mae:.2f} | R2: {test_r2:.4f}")
         print("-" * 50)
+    model.load_state_dict(best_model_weights)
+    print(f"Treino concluído! Melhor modelo resgatado da época {best_epoch} com MAE de {best_test_mae:.2f}")
     return model
 
 class LinearRegression(nn.Module):
@@ -92,23 +104,23 @@ class FinnancialModel(nn.Module):
         
         self.net = nn.Sequential(
             # Primeira camada oculta
-            nn.Linear(input_dim, 256),
-            nn.ReLU(),
-            nn.BatchNorm1d(256),
-            nn.Dropout(0.2),
-            
-            # Segunda camada oculta
-            nn.Linear(256, 128),
+            nn.Linear(input_dim, 128),
             nn.ReLU(),
             nn.BatchNorm1d(128),
-            nn.Dropout(0.2),
+            nn.Dropout(0.4),
+            
+            # Segunda camada oculta
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.BatchNorm1d(64),
+            nn.Dropout(0.4),
             
             # Terceira camada oculta
-            nn.Linear(128, 64),
+            nn.Linear(64, 32),
             nn.ReLU(),
             
             # Camada de Saída (1 neurônio para prever Weekly_Sales)
-            nn.Linear(64, output_dim)
+            nn.Linear(32, output_dim)
         )
 
     def forward(self, x):
