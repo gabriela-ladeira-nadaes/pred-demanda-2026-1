@@ -76,3 +76,22 @@ class FinnancialModel(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+class LSTMModel(nn.Module):
+    """Modelo LSTM para capturar dependências temporais de longo prazo nas vendas."""
+    
+    def __init__(self, input_dim: int,output_dim: int = 1, hidden_dim: int = 64, num_layers: int = 2):
+        super().__init__()
+        self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+        
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x):
+        if x.dim() == 2:
+            x = x.unsqueeze(1)
+            
+        out, _ = self.lstm(x)
+        
+        out = self.fc(out[:, -1, :]) 
+        return out

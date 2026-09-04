@@ -8,7 +8,7 @@ from preprocessing.transform import clean_data, split_data, standardize, describ
 from preprocessing.features import create_features
 from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
 from training.train import train_model
-from models.model import FinnancialModel,LinearRegression, save_model
+from models.model import FinnancialModel,LinearRegression,LSTMModel, save_model
 
 def main() -> None:
     # Carregamento e validacao
@@ -50,7 +50,8 @@ def main() -> None:
 
     models = {
     "Linear Regression": LinearRegression(input_dim, output_dim),
-    "Multilayer Perceptron": FinnancialModel(input_dim, output_dim)
+    "Multilayer Perceptron": FinnancialModel(input_dim, output_dim),
+    "LSTM" : LSTMModel(input_dim,output_dim)
     }
 
     best_wmae_global = float('inf')
