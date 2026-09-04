@@ -48,45 +48,49 @@ def load_latest_model_and_scalers(models_dir: str = "models"):
     
     return model, scaler_y, transformer
 
-def generate_forecast(model: torch.nn.Module, scaler_y: StandardScaler, transformer: ColumnTransformer, store_id: int, dept_id: int, start_date: str, df_historic: pd.DataFrame, weeks_ahead: int = 26) -> pd.DataFrame:
-    """Gera um DataFrame com projeções de vendas para as próximas semanas."""
+def generate_forecast(model: torch.nn.Module, scaler_y: StandardScaler, transformer: ColumnTransformer, start_date: str, df_historic: pd.DataFrame, store_id: int = None, dept_id: int = None, weeks_ahead: int = 26) -> pd.DataFrame:
+    """Gera projeções para uma loja/dept específico ou para toda a rede Walmart."""
     
-    # Extrai o tamanho e o tipo da loja baseando-se no histórico real
-    store_info = df_historic[df_historic['Store'] == store_id].iloc[0]
-    store_size = store_info['Size']
-    store_type = store_info['Type']
+    unique_combos = df_historic[['Store', 'Dept', 'Size', 'Type']].drop_duplicates()
+    
+    if store_id is not None:
+        unique_combos = unique_combos[unique_combos['Store'] == store_id]
+    if dept_id is not None:
+        unique_combos = unique_combos[unique_combos['Dept'] == dept_id]
         
+    if unique_combos.empty:
+        raise ValueError("Combinação de Loja e Departamento não encontrada.")
+
+    df_historic_sorted = df_historic.sort_values('Date')
+    latest_macro = df_historic_sorted.groupby('Store').tail(1)[['Store', 'CPI', 'Unemployment', 'Fuel_Price']]
+
+    df_historic_copy = df_historic.copy()
+    df_historic_copy['Month'] = pd.to_datetime(df_historic_copy['Date']).dt.month
+    
+    markdown_cols = ['MarkDown1', 'MarkDown2', 'MarkDown3', 'MarkDown4', 'MarkDown5']
+    df_historic_copy[markdown_cols] = df_historic_copy[markdown_cols].fillna(0)
+    
+    seasonal_cols = ['Temperature'] + markdown_cols
+    seasonal_stats = df_historic_copy.groupby(['Store', 'Month'])[seasonal_cols].mean().reset_index()
+
     start_datetime = pd.to_datetime(start_date)
     next_dates = pd.date_range(start=start_datetime + timedelta(days=7), periods=weeks_ahead, freq='W-FRI')
-
-    df_future = pd.DataFrame({
-        'Store': store_id,
-        'Dept': dept_id,
-        'Date': next_dates,
-        'Type': store_type,      
-        'Size': store_size,  
-        'Temperature': 60.0, 
-        'Fuel_Price': 3.5,
-        'CPI': 220.0,
-        'Unemployment': 7.0,
-        'MarkDown1': 0.0, 
-        'MarkDown2': 0.0, 
-        'MarkDown3': 0.0, 
-        'MarkDown4': 0.0, 
-        'MarkDown5': 0.0
-    })
-   
+    df_dates = pd.DataFrame({'Date': next_dates})
+    
+    df_future = unique_combos.merge(df_dates, how='cross')
+    
     df_future['Year'] = df_future['Date'].dt.year
     df_future['Month'] = df_future['Date'].dt.month
-    
-    # Renomeado de 'Week' para 'WeekOfYear' para bater com o padrão de treino
     df_future['WeekOfYear'] = df_future['Date'].dt.isocalendar().week
     df_future['IsHoliday'] = df_future['WeekOfYear'].isin([6, 36, 47, 52])
     
-    # Remove a coluna Date apenas se ela não foi usada no fit do ColumnTransformer
+    df_future = df_future.merge(latest_macro, on='Store', how='left')
+    df_future = df_future.merge(seasonal_stats, on=['Store', 'Month'], how='left')
+    
+    df_future.fillna(0, inplace=True)
+    
     df_transformer = df_future.drop(columns=['Date']) if 'Date' not in transformer.feature_names_in_ else df_future
     
-    # Pipeline de Inferência
     X_processed = transformer.transform(df_transformer)
     X_tensor = torch.tensor(X_processed, dtype=torch.float32)
     
@@ -94,6 +98,6 @@ def generate_forecast(model: torch.nn.Module, scaler_y: StandardScaler, transfor
         preds_scaled = model(X_tensor).numpy()
         
     preds_real = scaler_y.inverse_transform(preds_scaled)
-   
     df_future['Projected_Sales'] = preds_real
+    
     return df_future
