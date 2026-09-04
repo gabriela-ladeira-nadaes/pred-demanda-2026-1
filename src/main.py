@@ -2,13 +2,13 @@ import pandas as pd
 import torch
 import copy
 
-from data.data_loader import load_data, validate_data, save_model
+from data.data_loader import load_data, validate_data
 from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
 from preprocessing.transform import clean_data, split_data, standardize, describe_array, standardize_y
 from preprocessing.features import create_features
 from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
 from training.train import train_model
-from training.model import FinnancialModel,LinearRegression
+from models.model import FinnancialModel,LinearRegression, save_model
 
 def main() -> None:
     # Carregamento e validacao
