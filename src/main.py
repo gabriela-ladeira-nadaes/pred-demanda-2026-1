@@ -3,10 +3,11 @@ import torch
 
 from data.data_loader import load_data, validate_data, save_model
 from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
-from preprocessing.transform import clean_data, build_features_matrix, split_data, standardize, describe_array, standardize_y
+from preprocessing.transform import clean_data, split_data, standardize, describe_array, standardize_y
 from preprocessing.features import create_features
 from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
-from training.train import FinnancialModel,train_model
+from training.train import train_model
+from training.model import FinnancialModel
 
 def main() -> None:
     # Carregamento e validacao
@@ -44,7 +45,7 @@ def main() -> None:
 
     torch.manual_seed(FIXED_SEED)
     input_dim = X_train_t.shape[1]
-    output_dim = 1  # 1 valor sendo previsto
+    output_dim = 1  # Dimensao de saida
     model = FinnancialModel(input_dim,output_dim)
     model = model.to(device)
 
