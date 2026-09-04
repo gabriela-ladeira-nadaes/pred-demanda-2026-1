@@ -23,7 +23,12 @@ def save_model(model: nn.Module, scaler_y: StandardScaler, standardizer: ColumnT
     scaler_y_save_path = model_path / scaler_y_name
     transformer_save_path = model_path / transformer_name
 
-    torch.save(obj=model.state_dict(), f=model_save_path)    
+    checkpoint = {
+        'name': model.__class__.__name__,
+        'weights': model.state_dict()
+    }
+
+    torch.save(obj=checkpoint, f=model_save_path)    
     joblib.dump(scaler_y, scaler_y_save_path)
     joblib.dump(standardizer, transformer_save_path)
 
