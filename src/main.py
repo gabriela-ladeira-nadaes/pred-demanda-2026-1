@@ -25,7 +25,7 @@ def main() -> None:
     # Criacao de matriz de features e vetor alvo em NumPy
     # Split cronologico e normalizacao
     X_train,y_train, X_test, y_test = split_data(data)
-    X_train, X_test = standardize(X_train, X_test)
+    X_train, X_test, standardizer = standardize(X_train, X_test)
 
     #Normalizar Y
     y_train_scaled, y_test_scaled, scaler_y = standardize_y(y_train,y_test)
@@ -71,7 +71,7 @@ def main() -> None:
             best_modelo_global = copy.deepcopy(model_trained)
    
     print(f"\nO Modelo escolhido foi '{best_name}' com um WMAE de ${best_wmae_global:.2f}!")
-    save_model(best_modelo_global)   
+    save_model(best_modelo_global, scaler_y, standardizer)   
    
 if __name__ == "__main__":
     main()

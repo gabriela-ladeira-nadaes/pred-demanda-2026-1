@@ -35,7 +35,7 @@ def split_data(data: pd.DataFrame, cutoffDate: datetime = CUTOFF_DATE) -> tuple[
     return build_features_matrix(df_train) + build_features_matrix(df_test)
      
 
-def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np.ndarray, ColumnTransformer]:
     """Transforma variaveis categoricas em número e Normaliza"""
     feature_cols = NUMERIC_FEATURES + CATEGORICAL_FEATURES + TEMPORAL_FEATURES
     X_train_df = pd.DataFrame(X_train, columns=feature_cols)
@@ -52,7 +52,7 @@ def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np
     X_train_processed = standardizer.fit_transform(X_train_df)
 
     X_test_processed = standardizer.transform(X_test_df)
-    return X_train_processed, X_test_processed
+    return X_train_processed, X_test_processed, standardizer
 
 def standardize_y(y_train: np.ndarray, y_test: np.ndarray) -> tuple[np.ndarray, np.ndarray, StandardScaler]:
     """Normaliza o Y"""

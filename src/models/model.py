@@ -1,19 +1,35 @@
 import torch
 import torch.nn as nn
+import joblib
 
 from datetime import datetime
 from pathlib import Path
+from sklearn.preprocessing import StandardScaler
+from sklearn.compose import ColumnTransformer
 
-def save_model(model: nn.Module):
-    """Salvar o modelo treinado na past models"""
+def save_model(model: nn.Module, scaler_y: StandardScaler, standardizer: ColumnTransformer):
+    """Salvar o modelo treinado e os transformadores de dados"""
     model_path = Path("models")
     model_path.mkdir(parents=True, exist_ok=True)
-    agora = datetime.now()
-    timestamp = agora.strftime("%Y%m%d_%H%M%S")
+
+    now = datetime.now()
+    timestamp = now.strftime("%Y%m%d_%H%M%S")
+
     model_name = f"pytorch_workflow_model_{timestamp}.pth"
+    scaler_y_name = f"scaler_y_{timestamp}.pkl"
+    transformer_name = f"column_transformer_{timestamp}.pkl"
+
     model_save_path = model_path / model_name
-    torch.save(obj=model.state_dict(), f=model_save_path)
-    print(f"Modelo salvo com sucesso em: {model_save_path}")
+    scaler_y_save_path = model_path / scaler_y_name
+    transformer_save_path = model_path / transformer_name
+
+    torch.save(obj=model.state_dict(), f=model_save_path)    
+    joblib.dump(scaler_y, scaler_y_save_path)
+    joblib.dump(standardizer, transformer_save_path)
+
+    print(f"Modelo salvo em: {model_save_path}")
+    print(f"Scaler Y salvo em: {scaler_y_save_path}")
+    print(f"Transformador X salvo em: {transformer_save_path}")
 
 """Modelos implementados"""
 class LinearRegression(nn.Module):
