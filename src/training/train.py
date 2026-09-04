@@ -12,7 +12,7 @@ from evaluation.metrics import wmae_score_numpy
 def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_loader: DataLoader, scaler_Y: StandardScaler) -> nn.Module:
     """Treina o modelo a partir do DataLoader de treino"""
     criterion_mse = nn.MSELoss()    
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.00015, weight_decay=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001, weight_decay=1e-4)
 
     best_test_wmae = float('inf') 
     best_model_weights = None
