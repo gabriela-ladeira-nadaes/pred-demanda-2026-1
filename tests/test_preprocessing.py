@@ -88,7 +88,7 @@ class TestPreprocessing(unittest.TestCase):
     def test_standardize_shape(self):
         df = self._prepared()
         X_train, _, X_test, _ = split_data(df)
-        Xp_train, Xp_test = standardize(X_train, X_test)
+        Xp_train, Xp_test, _ = standardize(X_train, X_test)
 
         self.assertEqual(Xp_train.shape[0], X_train.shape[0])
         self.assertEqual(Xp_test.shape[0], X_test.shape[0])
@@ -99,7 +99,7 @@ class TestPreprocessing(unittest.TestCase):
     def test_standardize_mean(self):
         df = self._prepared()
         X_train, _, X_test, _ = split_data(df)
-        Xp, _ = standardize(X_train, X_test)
+        Xp, _, _ = standardize(X_train, X_test)
 
         # Colunas "binárias" (one-hot + IsHoliday) ficam em {0, 1}; as demais
         # são as colunas numéricas padronizadas, que devem ter média 0 e std 1.
@@ -113,7 +113,7 @@ class TestPreprocessing(unittest.TestCase):
     def test_standardize_binary_columns_are_onehot(self):
         df = self._prepared()
         X_train, _, X_test, _ = split_data(df)
-        Xp, _ = standardize(X_train, X_test)
+        Xp, _, _ = standardize(X_train, X_test)
 
         binary = np.all(np.isin(Xp, [0.0, 1.0]), axis=0)
         self.assertGreater(int(binary.sum()), 0)

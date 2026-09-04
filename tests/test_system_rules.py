@@ -39,13 +39,13 @@ class TestSystemRules(unittest.TestCase):
         """A padronização não pode vazar informação do teste para o treino."""
         X_train, _, X_test, _ = split_data(self.df)
 
-        train_a, test_a = standardize(X_train, X_test)
+        train_a, test_a, _ = standardize(X_train, X_test)
 
         # Perturba apenas as colunas numéricas do teste (sem criar categorias
         # desconhecidas no OneHotEncoder).
         X_test_alt = X_test.copy()
         X_test_alt[:, : len(NUMERIC_FEATURES)] *= 2.0
-        train_b, test_b = standardize(X_train, X_test_alt)
+        train_b, test_b, _ = standardize(X_train, X_test_alt)
 
         # A transformação do treino é idêntica independente do teste.
         np.testing.assert_array_equal(train_a, train_b)

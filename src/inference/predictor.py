@@ -5,7 +5,7 @@ import pandas as pd
 
 from pathlib import Path
 from datetime import timedelta
-from models.model import FinnancialModel, LinearRegression,LSTMModel
+from models.model import FinancialModel, LinearRegression,LSTMModel
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 
@@ -29,7 +29,7 @@ def load_latest_model_and_scalers(models_dir: str = "models"):
     dynamic_input_dim = weights[first_key].shape[1]
 
     model_maps = {
-        "FinnancialModel": FinnancialModel(dynamic_input_dim, 1),
+        "FinancialModel": FinancialModel(dynamic_input_dim, 1),
         "LinearRegression": LinearRegression(dynamic_input_dim, 1),
         "LSTM" : LSTMModel(dynamic_input_dim,1)
     }

@@ -36,7 +36,14 @@ def save_model(model: nn.Module, scaler_y: StandardScaler, standardizer: ColumnT
     print(f"Scaler Y salvo em: {scaler_y_save_path}")
     print(f"Transformador X salvo em: {transformer_save_path}")
 
-"""Modelos implementados"""
+
+def load_model(model: nn.Module, path: str | Path) -> nn.Module:
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    weights = checkpoint["weights"] if isinstance(checkpoint, dict) and "weights" in checkpoint else checkpoint
+    model.load_state_dict(weights)
+    model.eval()
+    return model
+
 class LinearRegression(nn.Module):
     def __init__(self, input_dim: int, output_dim: int):
         super().__init__()
@@ -48,9 +55,9 @@ class LinearRegression(nn.Module):
         out = self.linear(x)
         return out
     
-class FinnancialModel(nn.Module):
+class FinancialModel(nn.Module):
     def __init__(self, input_dim: int, output_dim: int):
-        super(FinnancialModel, self).__init__()
+        super(FinancialModel, self).__init__()
         
         self.net = nn.Sequential(
             # Primeira camada oculta
@@ -73,7 +80,7 @@ class FinnancialModel(nn.Module):
             nn.Linear(32, output_dim)
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
 
 class LSTMModel(nn.Module):
@@ -87,7 +94,7 @@ class LSTMModel(nn.Module):
         self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.dim() == 2:
             x = x.unsqueeze(1)
             
