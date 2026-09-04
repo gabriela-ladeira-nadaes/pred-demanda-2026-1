@@ -1,5 +1,6 @@
 import pandas as pd
 import torch
+import copy
 
 from data.data_loader import load_data, validate_data, save_model
 from data.datasets import get_device, to_tensors, make_dataset, make_dataloader
@@ -7,7 +8,7 @@ from preprocessing.transform import clean_data, split_data, standardize, describ
 from preprocessing.features import create_features
 from utils.config import DATA_PATH, BATCH_SIZE, FIXED_SEED, EPOCHS
 from training.train import train_model
-from training.model import FinnancialModel
+from training.model import FinnancialModel,LinearRegression
 
 def main() -> None:
     # Carregamento e validacao
@@ -46,11 +47,31 @@ def main() -> None:
     torch.manual_seed(FIXED_SEED)
     input_dim = X_train_t.shape[1]
     output_dim = 1  # Dimensao de saida
-    model = FinnancialModel(input_dim,output_dim)
-    model = model.to(device)
 
-    model = train_model(model, EPOCHS, train_loader, test_loader,scaler_y)
-    save_model(model)
+    models = {
+    "Linear Regression": LinearRegression(input_dim, output_dim),
+    "Multilayer Perceptron": FinnancialModel(input_dim, output_dim)
+    }
+
+    best_wmae_global = float('inf')
+    best_modelo_global = None
+    best_name = ""
+    
+    for model_name, model in models.items():
+        print(f"\n{'='*20} Iniciando teste: {model_name} {'='*20}")        
+        model = model.to(device)        
+        # Recebe o modelo treinado e a pontuação dele
+        model_trained, wmae_result = train_model(model, EPOCHS, train_loader, test_loader, scaler_y)
+        
+        print(f"[{model_name}] finalizou com WMAE: {wmae_result:.2f}")        
+       
+        if wmae_result < best_wmae_global:
+            best_wmae_global = wmae_result
+            best_name = model_name            
+            best_modelo_global = copy.deepcopy(model_trained)
+   
+    print(f"\nO Modelo escolhido foi '{best_name}' com um WMAE de ${best_wmae_global:.2f}!")
+    save_model(best_modelo_global)   
    
 if __name__ == "__main__":
     main()

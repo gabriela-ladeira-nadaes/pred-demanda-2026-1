@@ -2,6 +2,7 @@ import copy
 import torch
 import torch.nn as nn
 import numpy as np
+
 from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
@@ -95,5 +96,5 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
         print("-" * 50)
     model.load_state_dict(best_model_weights)
     print(f"Treino concluído! Melhor modelo resgatado da época {best_epoch} com WMAE de {best_test_wmae:.2f}")
-    return model
+    return model, best_test_wmae
 
