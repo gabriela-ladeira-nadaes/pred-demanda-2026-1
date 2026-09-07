@@ -8,7 +8,7 @@ DATA_PATH: Path = BASE_DIR/"data"/"walmart_dataset_sales.csv" # caminho do datas
 # Parametros do experimento
 FIXED_SEED: int = 42
 BATCH_SIZE: int = 64
-EPOCHS: int = 50
+EPOCHS: int = 100
 CUTOFF_DATE: datetime = '2012-01-01'
 
 # Coluna alvo

@@ -49,9 +49,9 @@ def main() -> None:
     output_dim = 1  # Dimensao de saida
 
     models = {
-    "Linear Regression": LinearRegression(input_dim, output_dim),
+    #"Linear Regression": LinearRegression(input_dim, output_dim),
     "Multilayer Perceptron": FinancialModel(input_dim, output_dim),
-    "LSTM" : LSTMModel(input_dim,output_dim)
+    #"LSTM" : LSTMModel(input_dim,output_dim)
     }
 
     best_wmae_global = float('inf')

@@ -8,6 +8,11 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.preprocessing import StandardScaler
 from evaluation.metrics import wmae_score_numpy
 
+def weighted_l1_loss(pred: torch.Tensor, target: torch.Tensor, is_holiday: torch.Tensor, weight_holiday: float = 5.0) -> torch.Tensor:
+    """Loss L1 ponderada — mesma lógica do WMAE de avaliação (peso 5x em feriado)."""
+    weights = torch.where(is_holiday == 1, weight_holiday, 1.0)
+    return (weights * (pred - target).abs()).sum() / weights.sum()
+
 
 def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_loader: DataLoader, scaler_Y: StandardScaler) -> nn.Module:
     """Treina o modelo a partir do DataLoader de treino"""
@@ -34,8 +39,11 @@ def train_model(model: nn.Module, epochs: int, train_loader: DataLoader, test_lo
 
             predictions = model(batch_X)
           
-            loss_mse = criterion_mse(predictions, batch_y)
-            loss_mse.backward()
+            #loss_mse = criterion_mse(predictions, batch_y)
+            batch_is_holiday = batch_X[:, -1].reshape(-1, 1)
+            loss = weighted_l1_loss(predictions, batch_y, batch_is_holiday)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5.0)
             optimizer.step()
             
             train_predictions.extend(predictions.detach().cpu().numpy().ravel().tolist())
