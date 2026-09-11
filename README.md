@@ -8,6 +8,8 @@ As variações semanais das vendas dificultam o planejamento de abastecimento da
 
 O levantamento de requisitos foi feito com o framework **GR4ML** (documento `predicao_demandas_GR4ML.pdf`, na raiz do repositório), que define o WMAE como métrica principal e origina os requisitos funcionais, não funcionais e de dados.
 
+A apresentação final está em `predicao_demandas_apresentacao.pdf`, também na raiz.
+
 ## Dataset
 
 `data/walmart_dataset_sales.csv` — 421.570 registros semanais entre 2010-02-05 e 2012-10-26, cobrindo 45 lojas e 81 departamentos.
@@ -123,6 +125,12 @@ Tanto o `ColumnTransformer` quanto o scaler do alvo são ajustados no treino e a
 
 **`FinancialModel`** — MLP de três camadas ocultas: `Linear(input, 128) → ReLU → BatchNorm → Dropout(0.4)` → `Linear(128, 64) → ReLU → BatchNorm → Dropout(0.4)` → `Linear(64, 32) → ReLU` → `Linear(32, 1)`.
 
+**`LSTMModel`** — LSTM de 2 camadas com 64 unidades ocultas, seguida de uma camada linear. Como cada exemplo é uma linha independente, a entrada é tratada como uma sequência de comprimento 1.
+
+**`LinearRegression`** — uma única camada `Linear(input, 1)`, usada como baseline.
+
+A entrada tem 200 dimensões: as 17 colunas de features viram 200 após o one-hot de loja, departamento, tipo, mês e semana do ano.
+
 | Hiperparâmetro | Valor |
 | --- | --- |
 | Loss | `weighted_l1_loss` — L1 com peso 5 em semanas de feriado |
@@ -145,6 +153,53 @@ O **WMAE** (`evaluation/metrics.py`) é a métrica principal, herdada da competi
 WMAE = Σ(wᵢ · |yᵢ − ŷᵢ|) / Σwᵢ,  onde wᵢ = 5 em semana de feriado e 1 nas demais
 ```
 
+## Configuração experimental
+
+Split cronológico com 294.132 registros de treino (fev/2010 – dez/2011) e 127.438 de teste (jan/2012 – out/2012). Os três modelos são treinados com os mesmos hiperparâmetros e comparados pelo WMAE de teste.
+
+**O que buscávamos descobrir:** se alinhar a loss de treino à métrica de negócio (WMAE) e limitar a norma do gradiente reduziria a oscilação do erro entre épocas, sem comprometer a convergência.
+
+| Dimensão | Configurações testadas |
+| --- | --- |
+| Função de perda | MSE × L1 ponderada, alinhada ao WMAE (adotada) |
+| Gradient clipping | sem clipping × `max_norm = 1,0` × `max_norm = 5,0` (adotado) |
+| Modelo | Regressão Linear (baseline) × LSTM × MLP |
+
+## Resultados
+
+Valores em dólares, após desfazer a normalização do alvo, na melhor época de cada modelo. Execução reportada na apresentação.
+
+| Modelo | Conjunto | RMSE | MAE | WMAE | R² |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Regressão Linear | treino | 14.521,13 | 7.411,99 | 7.680,21 | 0,6 |
+| | teste | 13.049,88 | 7.126,73 | 7.193,12 | 0,652 |
+| **MLP** | treino | 6.187,18 | 2.895,19 | 3.050,73 | 0,9274 |
+| | **teste** | **5.183,67** | **2.534,74** | **2.604,71** | **0,9451** |
+| LSTM | treino | 4.009,26 | 1.647,18 | 1.715,51 | 0,9695 |
+| | teste | 5.846,49 | 3.199,35 | 3.351,25 | 0,9301 |
+
+- **O MLP é o modelo escolhido** e o artefato salvo em `models/`: menor WMAE de teste, 63,8% abaixo da regressão linear.
+- **O LSTM sobreajusta.** Tem o menor erro de treino (WMAE 1.715,51), mas piora no teste (3.351,25) — a capacidade extra não generaliza para 2012.
+- **A regressão linear fica em R² 0,65 no teste**, o que confirma que a relação entre os atributos e as vendas não é linear.
+- O MLP acompanha bem o nível agregado das vendas, mas responde mal a picos pontuais de uma única semana.
+
+O `src/predict.py` usa o modelo escolhido para projetar 52 semanas da rede completa e gera os gráficos de projeção mensal e acumulada.
+
+## Atendimento aos requisitos
+
+| Requisito | Situação | Evidência |
+| --- | --- | --- |
+| RF01 — previsão semanal por loja e departamento | Atendido | `generate_forecast` projeta N semanas para todas as combinações |
+| RF02 — consulta por loja, departamento ou rede | Atendido | parâmetros `store_id` e `dept_id` de `generate_forecast` |
+| RF03 — ordenar por maiores e menores vendas previstas | Não implementado | próximo passo |
+| RF04 — registrar o realizado e comparar com o previsto | Não implementado | próximo passo |
+| RF05 — comparar com a semana anterior e o histórico | Parcial | gráficos de histórico × projeção em `visualization.py`, sem comparação tabular |
+| RNF01 — reduzir o WMAE em ≥ 15% em relação ao baseline | Atendido | −63,8% em relação à regressão linear (7.193,12 → 2.604,71) |
+| RNF02 — reprodutibilidade, diferença ≤ 5% entre execuções | Parcial | semente fixa em `config.py`; comparação entre execuções não automatizada |
+| RNF03 — 100% de cobertura, sem previsões inválidas | Parcial | uma linha por combinação × semana, mas 0,10% das projeções saem negativas |
+| RNF04 — componentes testáveis isoladamente | Parcial | carregamento, preparação temporal e persistência têm testes; WMAE e inferência não |
+| RNF05 — ponderar feriados | Atendido | WMAE com peso 5 na avaliação e na loss de treino |
+
 ## Testes
 
 Suíte em `unittest`:
@@ -166,7 +221,12 @@ python -m unittest discover -s tests
 
 ## Limitações conhecidas
 
-TODO: Gabriel Leite
+- **Dificuldade em janelas.** MLP que responde bem globalmente, mas não é bom para entender impactos temporais. Ex. Pico de venda em uma semana 
+
+## Próximos passos
+
+- Testar modelos baseados em árvore, como XGBoost e Random Forest.
+- Automatizar o retreino junto ao fechamento mensal.
 
 ## Equipe
 
